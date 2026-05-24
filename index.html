@@ -389,9 +389,7 @@
         <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-white/20 transform scale-95 opacity-0 transition-all duration-300" id="rulesContent">
             <div class="bg-gradient-to-r from-primary-medium to-primary-dark text-white p-8 text-center relative overflow-hidden">
                 <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
-                <div class="w-16 h-16 rounded-xl bg-white/25 backdrop-blur-md border border-white/30 flex items-center justify-center mx-auto mb-4 text-3xl">
-                    <span class="material-symbols-outlined text-white font-bold">verified_user</span>
-                </div>
+                <img src="logo-sede-online.svg" class="h-14 w-auto object-contain mx-auto mb-4 select-none" alt="Sede Online Logo">
                 <h2 class="font-display text-2xl font-black leading-tight">¡Bienvenido a Sede Online!<br><span class="font-medium text-primary-light text-base">Recursos Gráficos Multimedia</span></h2>
             </div>
             <div class="p-8">
@@ -572,16 +570,11 @@
                 </div>
             </div>
             
-            <!-- Search Bar -->
-            <div class="hidden md:flex flex-1 max-w-md ml-4">
-                <div class="relative w-full group">
-                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-medium transition-colors">search</span>
-                    <input class="w-full rounded-full bg-white/70 focus:bg-white border border-slate-200/60 shadow-inner pl-12 pr-12 py-2.5 font-body text-xs outline-none focus:ring-2 focus:ring-primary-medium/35 transition-all duration-300 placeholder:text-slate-400" id="searchInput" placeholder="Buscar recursos, plantillas..." type="text" oninput="searchResources(this.value)">
-                </div>
-            </div>
-            
             <!-- Actions & Profile -->
-            <div class="flex items-center gap-2 md:gap-4 ml-auto">
+            <div class="flex items-center gap-3 md:gap-5 ml-auto">
+                <!-- CFT Logo (Suelto al lado) -->
+                <img src="CFT Logotipo CFT RGB_colores.svg" class="hidden lg:block h-16 w-auto object-contain select-none mr-5" alt="CFT San Agustín Logo">
+                
                 <div class="hidden lg:flex items-center gap-2 bg-white/60 backdrop-blur-sm border border-slate-200/65 rounded-full py-1 px-3.5 shadow-sm text-[10px] font-bold text-slate-400">
                     <span class="font-label tracking-wide uppercase mr-1">HEX:</span>
                     <button onclick="copyToClipboard('#0f4596')" class="w-4 h-4 rounded-full bg-[#0f4596] border border-white hover:scale-125 transition-transform" title="Copiar Azul Oscuro (#0f4596)"></button>
@@ -591,8 +584,10 @@
                     <button onclick="copyToClipboard('#8F8AF9')" class="w-4 h-4 rounded-full bg-[#8F8AF9] border border-white hover:scale-125 transition-transform" title="Copiar Módulo Transversal (#8F8AF9)"></button>
                 </div>
                 
-                <button onclick="openRules()" class="p-2 text-slate-600 hover:text-primary-medium hover:bg-primary-light/20 rounded-full transition-colors relative" title="Reglas del repositorio">
-                    <span class="material-symbols-outlined">help</span>
+                <!-- Botón de Reglas con Texto -->
+                <button onclick="openRules()" class="inline-flex items-center gap-1.5 py-1 px-2.5 text-slate-600 hover:text-primary-medium hover:bg-primary-light/20 border border-slate-200/40 rounded-full transition-colors font-label text-[10px] font-bold uppercase tracking-wider bg-white/40 shadow-sm" title="Reglas del repositorio">
+                    <span class="material-symbols-outlined text-[16px]">help</span>
+                    <span>Reglas</span>
                 </button>
                 <button onclick="toggleNews()" class="p-2 text-slate-600 hover:text-primary-medium hover:bg-primary-light/20 rounded-full transition-colors relative" title="Registro de cambios">
                     <span class="material-symbols-outlined">notifications</span>
@@ -2999,7 +2994,7 @@
         /* =======================================================
            LOCALSTORAGE PERSISTENCE AND PARSING ENGINE (MIV BACKWARD COMPATIBLE)
            ======================================================= */
-        const CURRENT_VERSION = '1.0.16';
+        const CURRENT_VERSION = '1.0.23';
  
         function saveLocal() {
             // Desactivar temporalmente el modo de edición para clonar HTML limpio (sin bordes punteados ni estados de foco)
