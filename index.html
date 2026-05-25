@@ -1977,6 +1977,28 @@
         let currentEditCard = null;
         let targetGridForAdd = null;
 
+        /* ===== FORMATTING TOOLS ===== */
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'b')) {
+                const target = e.target;
+                if (target.isContentEditable) {
+                    e.preventDefault();
+                    document.execCommand('bold', false, null);
+                }
+            }
+        });
+
+        document.addEventListener('blur', function(e) {
+            const target = e.target;
+            if (target && target.isContentEditable) {
+                let html = target.innerHTML;
+                if (html.includes('**')) {
+                    target.innerHTML = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                }
+            }
+        }, true);
+
+
         /* ===== RULES MODAL HANDLERS ===== */
         function openRules() {
             const m = document.getElementById('rulesModal');
