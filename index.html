@@ -475,8 +475,11 @@
         </div>
     </aside>
 
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobileSidebarOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] hidden md:hidden transition-opacity duration-300" onclick="closeSidebar()"></div>
+
     <!-- SideNavBar - COMPACT & SCROLL-FREE -->
-    <aside class="hidden md:flex h-screen w-72 flex-shrink-0 border-r border-white/10 shadow-2xl bg-gradient-to-b from-[#0c1a3a] via-[#09132b] to-[#050c1e] bg-gradient-flow flex-col pt-9 pb-5 px-5 z-20 overflow-hidden select-none">
+    <aside id="mainSidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out flex h-screen w-72 flex-shrink-0 border-r border-white/10 shadow-2xl bg-gradient-to-b from-[#0c1a3a] via-[#09132b] to-[#050c1e] bg-gradient-flow flex-col pt-9 pb-5 px-5 z-[60] md:z-20 overflow-hidden select-none">
         <!-- Brand / Header -->
         <div onclick="filterSelection('all', document.getElementById('btnAll'))" class="flex flex-col items-center justify-center text-center px-1 pt-4 pb-6 mb-6 border-b border-white/10 cursor-pointer group">
             <img src="logo-sede-online.svg" class="h-12 w-auto max-w-[90%] object-contain select-none transition-all duration-300 group-hover:scale-[1.03] mb-4" alt="Sede Online Logo">
@@ -2048,9 +2051,23 @@
 
         /* ===== SIDEBAR TOGGLER (MOBILE) ===== */
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebarNav').parentElement;
-            sidebar.classList.toggle('hidden');
-            sidebar.classList.toggle('flex');
+            const sidebar = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                closeSidebar();
+            }
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.add('-translate-x-full');
+                if(overlay) overlay.classList.add('hidden');
+            }
         }
 
         /* ===== CONSIDERATIONS ACCORDION EVENT LOOPS ===== */
@@ -2200,7 +2217,7 @@
             
             // Close mobile menu
             if (window.innerWidth < 768) {
-                document.getElementById('sidebarNav').parentElement.classList.add('hidden');
+                closeSidebar();
             }
         }
 
@@ -2293,7 +2310,7 @@
             
             // Close mobile menu
             if (window.innerWidth < 768) {
-                document.getElementById('sidebarNav').parentElement.classList.add('hidden');
+                closeSidebar();
             }
 
             // Checklist update triggers if checklist view opened
