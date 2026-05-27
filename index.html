@@ -3114,71 +3114,179 @@
         }
 
         /* =======================================================
-           LOCALSTORAGE PERSISTENCE AND PARSING ENGINE (MIV BACKWARD COMPATIBLE)
+           FIREBASE + LOCALSTORAGE PERSISTENCE ENGINE
            ======================================================= */
-        const CURRENT_VERSION = '1.0.23';
- 
-        function saveLocal() {
-            // Desactivar temporalmente el modo de edición para clonar HTML limpio (sin bordes punteados ni estados de foco)
+        const CURRENT_VERSION = '1.0.24';
+        const FIREBASE_DB_URL = 'https://sedeonline-reositorio-default-rtdb.firebaseio.com';
+
+        // Collects clean HTML snapshots from the DOM
+        function collectDashboardData() {
             const wasAdmin = document.body.classList.contains('admin-mode');
             if (wasAdmin) {
                 toggleChecklistEditable(false);
                 toggleNewsEditable(false);
                 toggleConsiderationsEditable(false);
                 toggleColorSystemEditable(false);
+                toggleBannersEditable(false);
             }
 
+            const data = {};
+
             const gridCopy = document.getElementById('mainGrid').cloneNode(true);
-            gridCopy.querySelectorAll('.admin-actions, .add-card-btn, .admin-cons-actions, .add-cons-item-btn').forEach(el => el.remove());
+            gridCopy.querySelectorAll('.admin-actions, .add-card-btn, .admin-cons-actions, .add-cons-item-btn, .banner-admin-actions').forEach(el => el.remove());
             gridCopy.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
-            localStorage.setItem('sedeOnlineGridHTML', gridCopy.innerHTML);
- 
+            data.gridHTML = gridCopy.innerHTML;
+
             const chkSec = document.querySelector('.checklist-sections');
             if (chkSec) {
                 const chkCopy = chkSec.cloneNode(true);
                 chkCopy.querySelectorAll('.admin-checklist-actions, .add-checklist-group-btn').forEach(el => el.remove());
                 chkCopy.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
-                // Ensure checklist master template copy is clean and has unchecked boxes/0% labels
                 chkCopy.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
                 chkCopy.querySelectorAll('.group-progress-lbl').forEach(lbl => lbl.textContent = '0%');
-                localStorage.setItem('sedeOnlineChecklistHTML', chkCopy.innerHTML);
+                data.checklistHTML = chkCopy.innerHTML;
             }
- 
+
             const colorSec = document.getElementById('page-color');
             if (colorSec) {
                 const colorCopy = colorSec.cloneNode(true);
                 colorCopy.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
-                localStorage.setItem('sedeOnlineColorHTML', colorCopy.innerHTML);
+                data.colorHTML = colorCopy.innerHTML;
             }
- 
+
             const newsBody = document.querySelector('.news-panel-body');
             if (newsBody) {
                 const newsCopy = newsBody.cloneNode(true);
                 newsCopy.querySelectorAll('.admin-news-actions, .add-news-btn').forEach(el => el.remove());
                 newsCopy.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
-                localStorage.setItem('sedeOnlineNewsHTML', newsCopy.innerHTML);
+                data.newsHTML = newsCopy.innerHTML;
             }
- 
+
             const newsFooter = document.querySelector('.news-panel-footer');
             if (newsFooter) {
                 const footerCopy = newsFooter.cloneNode(true);
                 footerCopy.removeAttribute('contenteditable');
-                localStorage.setItem('sedeOnlineNewsFooterHTML', footerCopy.innerHTML);
+                data.newsFooterHTML = footerCopy.innerHTML;
             }
- 
-            localStorage.setItem('sedeOnlineVersion', CURRENT_VERSION);
 
-            // Reactivar el modo de edición si estaba activo
+            data.version = CURRENT_VERSION;
+            data.lastUpdated = new Date().toISOString();
+
             if (wasAdmin) {
                 toggleChecklistEditable(true);
                 toggleNewsEditable(true);
                 toggleConsiderationsEditable(true);
                 toggleColorSystemEditable(true);
+                toggleBannersEditable(true);
+            }
+
+            return data;
+        }
+
+        // Save to Firebase (cloud) + localStorage (offline cache)
+        async function saveToCloud(data) {
+            // Save to localStorage as cache
+            localStorage.setItem('sedeOnlineGridHTML', data.gridHTML || '');
+            if (data.checklistHTML) localStorage.setItem('sedeOnlineChecklistHTML', data.checklistHTML);
+            if (data.colorHTML) localStorage.setItem('sedeOnlineColorHTML', data.colorHTML);
+            if (data.newsHTML) localStorage.setItem('sedeOnlineNewsHTML', data.newsHTML);
+            if (data.newsFooterHTML) localStorage.setItem('sedeOnlineNewsFooterHTML', data.newsFooterHTML);
+            localStorage.setItem('sedeOnlineVersion', CURRENT_VERSION);
+
+            // Save to Firebase
+            try {
+                const response = await fetch(FIREBASE_DB_URL + '/dashboard.json', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error('Firebase response: ' + response.status);
+                return true;
+            } catch (err) {
+                console.error('Error guardando en Firebase:', err);
+                return false;
             }
         }
- 
-        function saveLocalAndNotify() {
-            saveLocal();
+
+        // Load from Firebase, fallback to localStorage
+        async function loadFromCloud() {
+            try {
+                const response = await fetch(FIREBASE_DB_URL + '/dashboard.json');
+                if (!response.ok) throw new Error('Firebase response: ' + response.status);
+                const data = await response.json();
+                if (data && data.gridHTML) {
+                    applyDashboardData(data);
+                    // Update local cache
+                    localStorage.setItem('sedeOnlineGridHTML', data.gridHTML);
+                    if (data.checklistHTML) localStorage.setItem('sedeOnlineChecklistHTML', data.checklistHTML);
+                    if (data.colorHTML) localStorage.setItem('sedeOnlineColorHTML', data.colorHTML);
+                    if (data.newsHTML) localStorage.setItem('sedeOnlineNewsHTML', data.newsHTML);
+                    if (data.newsFooterHTML) localStorage.setItem('sedeOnlineNewsFooterHTML', data.newsFooterHTML);
+                    localStorage.setItem('sedeOnlineVersion', CURRENT_VERSION);
+                    return true;
+                }
+            } catch (err) {
+                console.warn('No se pudo cargar desde Firebase, usando cache local:', err);
+            }
+            // Fallback: load from localStorage
+            loadFromLocalCache();
+            return false;
+        }
+
+        // Apply data object to the DOM
+        function applyDashboardData(data) {
+            if (data.gridHTML) {
+                document.getElementById('mainGrid').innerHTML = data.gridHTML;
+            }
+            if (data.checklistHTML && document.querySelector('.checklist-sections')) {
+                document.querySelector('.checklist-sections').innerHTML = data.checklistHTML;
+            }
+            if (data.colorHTML && document.getElementById('page-color')) {
+                document.getElementById('page-color').innerHTML = data.colorHTML;
+            }
+            if (data.newsHTML && document.querySelector('.news-panel-body')) {
+                document.querySelector('.news-panel-body').innerHTML = data.newsHTML;
+            }
+            if (data.newsFooterHTML && document.querySelector('.news-panel-footer')) {
+                document.querySelector('.news-panel-footer').innerHTML = data.newsFooterHTML;
+            }
+        }
+
+        // Fallback: load from localStorage cache
+        function loadFromLocalCache() {
+            const savedGrid = localStorage.getItem('sedeOnlineGridHTML');
+            if (savedGrid) document.getElementById('mainGrid').innerHTML = savedGrid;
+
+            const savedChecklist = localStorage.getItem('sedeOnlineChecklistHTML');
+            if (savedChecklist && document.querySelector('.checklist-sections')) {
+                document.querySelector('.checklist-sections').innerHTML = savedChecklist;
+            }
+
+            const savedColor = localStorage.getItem('sedeOnlineColorHTML');
+            if (savedColor && document.getElementById('page-color')) {
+                document.getElementById('page-color').innerHTML = savedColor;
+            }
+
+            const savedNews = localStorage.getItem('sedeOnlineNewsHTML');
+            if (savedNews && document.querySelector('.news-panel-body')) {
+                document.querySelector('.news-panel-body').innerHTML = savedNews;
+            }
+
+            const savedNewsFooter = localStorage.getItem('sedeOnlineNewsFooterHTML');
+            if (savedNewsFooter && document.querySelector('.news-panel-footer')) {
+                document.querySelector('.news-panel-footer').innerHTML = savedNewsFooter;
+            }
+        }
+
+        // Backward-compatible wrappers
+        function saveLocal() {
+            const data = collectDashboardData();
+            saveToCloud(data);
+        }
+
+        async function saveLocalAndNotify() {
+            const data = collectDashboardData();
+            
             document.body.classList.remove('admin-mode');
             document.querySelector('.admin-fabs').classList.add('hidden');
             document.querySelector('.admin-fabs').classList.remove('flex');
@@ -3188,39 +3296,22 @@
             toggleConsiderationsEditable(false);
             toggleColorSystemEditable(false);
             toggleBannersEditable(false);
-            
-            showToast('Cambios guardados con exito en este navegador!');
+
+            showToast('⏳ Guardando cambios en la nube...');
+            const success = await saveToCloud(data);
+            if (success) {
+                showToast('✅ Cambios guardados en la nube. Visibles para todos.');
+            } else {
+                showToast('⚠️ Guardado local OK, pero hubo error con la nube.');
+            }
         }
- 
+
         function loadLocal() {
-            const savedGrid = localStorage.getItem('sedeOnlineGridHTML');
-            if (savedGrid) {
-                document.getElementById('mainGrid').innerHTML = savedGrid;
-            }
- 
-            const savedChecklist = localStorage.getItem('sedeOnlineChecklistHTML');
-            if (savedChecklist && document.querySelector('.checklist-sections')) {
-                document.querySelector('.checklist-sections').innerHTML = savedChecklist;
-            }
- 
-            const savedColor = localStorage.getItem('sedeOnlineColorHTML');
-            if (savedColor && document.getElementById('page-color')) {
-                document.getElementById('page-color').innerHTML = savedColor;
-            }
- 
-            const savedNews = localStorage.getItem('sedeOnlineNewsHTML');
-            if (savedNews && document.querySelector('.news-panel-body')) {
-                document.querySelector('.news-panel-body').innerHTML = savedNews;
-            }
- 
-            const savedNewsFooter = localStorage.getItem('sedeOnlineNewsFooterHTML');
-            if (savedNewsFooter && document.querySelector('.news-panel-footer')) {
-                document.querySelector('.news-panel-footer').innerHTML = savedNewsFooter;
-            }
+            loadFromLocalCache();
         }
  
-        function resetLocal() {
-            if (confirm('¿Seguro que deseas restablecer la plantilla a su estado original? Se perderán todas tus ediciones locales.')) {
+        async function resetLocal() {
+            if (confirm('¿Seguro que deseas restablecer la plantilla a su estado original? Se perderán todas las ediciones (local y nube).')) {
                 localStorage.removeItem('sedeOnlineGridHTML');
                 localStorage.removeItem('sedeOnlineChecklistHTML');
                 localStorage.removeItem('sedeOnlineColorHTML');
@@ -3228,22 +3319,18 @@
                 localStorage.removeItem('sedeOnlineNewsFooterHTML');
                 localStorage.removeItem('sedeOnlineVersion');
                 localStorage.removeItem('sedeOnlineUserChecklistState');
+                // Also clear Firebase
+                try {
+                    await fetch(FIREBASE_DB_URL + '/dashboard.json', { method: 'DELETE' });
+                } catch(e) { console.warn('No se pudo limpiar Firebase:', e); }
                 location.reload();
             }
         }
  
         /* ===== INIT TRIGGERS ===== */
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedVer = localStorage.getItem('sedeOnlineVersion');
-            if (savedVer !== CURRENT_VERSION) {
-                localStorage.removeItem('sedeOnlineGridHTML');
-                localStorage.removeItem('sedeOnlineChecklistHTML');
-                localStorage.removeItem('sedeOnlineColorHTML');
-                localStorage.removeItem('sedeOnlineNewsHTML');
-                localStorage.removeItem('sedeOnlineNewsFooterHTML');
-                localStorage.setItem('sedeOnlineVersion', CURRENT_VERSION);
-            }
-            loadLocal();
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Try to load from Firebase first, fallback to localStorage
+            await loadFromCloud();
             loadUserChecklistState();
             
             // Global checklist checkbox change listener to autosave private checkbox choices
