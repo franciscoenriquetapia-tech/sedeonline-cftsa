@@ -378,14 +378,101 @@
             letter-spacing: 0.05em !important;
         }
         /* Compact Sidebar for Notebooks (Vertical space optimization) */
-        @media (max-height: 800px) {
-            #mainSidebar { padding-top: 1.5rem !important; padding-bottom: 1rem !important; }
-            #mainSidebar > div.mb-6 { margin-bottom: 1rem !important; padding-bottom: 1rem !important; }
-            #mainSidebar img { height: 2.5rem !important; margin-bottom: 0.5rem !important; }
-            #sidebarNav > button { padding-top: 0.35rem !important; padding-bottom: 0.35rem !important; }
-            #sidebarNav > div.mt-6 { margin-top: 1rem !important; margin-bottom: 1.25rem !important; }
-            #sidebarNav p.pt-\\[21px\\] { padding-top: 0.5rem !important; margin-bottom: 0.25rem !important; }
-            #sidebarNav { space-y: 0 !important; gap: 0.125rem; }
+        @media (max-height: 850px) {
+            #mainSidebar { 
+                padding-top: 0.75rem !important; 
+                padding-bottom: 0.5rem !important; 
+                padding-left: 0.75rem !important;
+                padding-right: 0.75rem !important;
+                width: 16.5rem !important; /* 264px wide to save space */
+            }
+            #mainSidebar > div:first-child { 
+                margin-bottom: 0.5rem !important; 
+                padding-bottom: 0.5rem !important; 
+                padding-top: 0.25rem !important;
+            }
+            #mainSidebar img { 
+                height: 2.25rem !important; 
+                margin-bottom: 0.25rem !important; 
+            }
+            #mainSidebar img + div { 
+                font-size: 8px !important; 
+                line-height: 1.2 !important; 
+            }
+            
+            /* Remove space-y margins between buttons in sidebar navigation */
+            #sidebarNav > * {
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
+            }
+            
+            #sidebarNav { 
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 0.125rem !important; /* Extremely tight gap */
+            }
+            
+            #sidebarNav > button { 
+                padding-top: 0.3rem !important; 
+                padding-bottom: 0.3rem !important; 
+                font-size: 11px !important;
+                border-radius: 0.375rem !important;
+                gap: 0.5rem !important;
+            }
+            #sidebarNav > button span.material-symbols-outlined {
+                font-size: 14px !important;
+            }
+            
+            #sidebarNav > div.h-px { 
+                margin-top: 0.25rem !important; 
+                margin-bottom: 0.25rem !important; 
+                height: 1px !important;
+            }
+            
+            #sidebarNav p { 
+                padding-top: 0.35rem !important; 
+                padding-bottom: 0.15rem !important; 
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
+                font-size: 8px !important; 
+            }
+            
+            #mainSidebar > div.mt-auto {
+                padding-top: 0.35rem !important;
+                margin-top: auto !important;
+            }
+        }
+
+        /* Ultra-compact for extremely small heights (e.g. tablet horizontal or small notebooks) */
+        @media (max-height: 700px) {
+            #mainSidebar { 
+                padding-top: 0.5rem !important; 
+                padding-bottom: 0.25rem !important; 
+            }
+            #mainSidebar > div:first-child { 
+                margin-bottom: 0.25rem !important; 
+                padding-bottom: 0.25rem !important; 
+            }
+            #mainSidebar img { 
+                height: 1.75rem !important; 
+                margin-bottom: 0.15rem !important; 
+            }
+            #mainSidebar img + div { 
+                display: none !important; /* Hide brand text on extremely small heights to save space */
+            }
+            #sidebarNav > button { 
+                padding-top: 0.25rem !important; 
+                padding-bottom: 0.25rem !important; 
+                font-size: 10px !important;
+            }
+            #sidebarNav p { 
+                padding-top: 0.2rem !important; 
+                padding-bottom: 0.1rem !important; 
+            }
+            #sidebarNav > div.h-px { 
+                margin-top: 0.15rem !important; 
+                margin-bottom: 0.15rem !important; 
+            }
         }
     </style>
 
